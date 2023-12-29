@@ -132,3 +132,9 @@ $RECYCLE.BIN/
 
 _NCrunch*
 obj/Debug/net7.0/refint/DotNetAPI.dll
+bin/Debug/net7.0/DotNetAPI.dll
+bin/Debug/net7.0/DotNetAPI.pdb
+obj/Debug/net7.0/DotNetAPI.dll
+obj/Debug/net7.0/DotNetAPI.pdb
+obj/Debug/net7.0/ref/DotNetAPI.dll
+obj/Debug/net7.0/refint/DotNetAPI.dll

@@ -1,6 +1,10 @@
 using System.Reflection.Metadata.Ecma335;
+using DotNetAPI.Data;
+using DotNetAPI.DTOs;
+using DotNetAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-
+// sub namespace so that .net doesnt load up this controller as soon as we run the project
+// and save some resource + memory during runtime  
 namespace DotNetAPI.Controllers;
 
 [ApiController]

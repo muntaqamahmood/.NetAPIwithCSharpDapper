@@ -1,4 +1,4 @@
-namespace DotNetAPI
+namespace DotNetAPI.Models
 {
     // partial so that we can add to our Models on the fly
     public partial class UserJobInfo
