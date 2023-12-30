@@ -43,7 +43,7 @@ public class UserController : ControllerBase
 
     // [HttpGet("controller/url/{url_params}", Name = "Endpoint Name")]
     [HttpGet("GetSingleUser/{UserId}", Name = "GetSingleUser")]
-    public User GetSingleUser(string UserId) // function param is url params
+    public User GetSingleUser(int UserId) // function param is url params
     {
         User user;
         string sql = @"SELECT [UserId],
@@ -53,7 +53,7 @@ public class UserController : ControllerBase
             [Gender],
             [Active] 
         FROM DotNetCourseDatabase.TutorialAppSchema.Users
-        WHERE UserId = " + UserId;
+        WHERE UserId = " + UserId.ToString();
         user = _dapper.LoadDataSingle<User>(sql);
         return user;
     }
@@ -95,5 +95,15 @@ public class UserController : ControllerBase
         bool check = _dapper.ExecuteSqlWithRowCount(sql);
         if (check == true) return Ok();
         else throw new Exception("Failed to Add User!");
+    }
+
+    [HttpDelete("DeleteUser", Name = "DeleteUser")]
+    public IActionResult DeleteUser(int UserId)
+    {
+        string sql = @"
+        DELETE FROM TutorialAppSchema.Users WHERE UserId = " + UserId.ToString();
+        bool check = _dapper.ExecuteSqlWithRowCount(sql);
+        if (check == true) return Ok();
+        else throw new Exception("Failed to Delete User!");
     }
 }
