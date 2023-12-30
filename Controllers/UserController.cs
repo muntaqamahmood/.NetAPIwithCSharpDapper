@@ -1,4 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
 using DotNetAPI.Data;
 using DotNetAPI.DTOs;
 using DotNetAPI.Models;
@@ -20,8 +19,8 @@ public class UserController : ControllerBase
     }
 
 
-    [HttpGet("GetDate", Name = "GetUserDate")]
-    public DateTime GetUserDate()
+    [HttpGet("TestConnection", Name = "TestConnection")]
+    public DateTime TestConnection()
     {
         return _dapper.LoadDataSingle<DateTime>("SELECT GETDATE()");
     }
@@ -61,7 +60,7 @@ public class UserController : ControllerBase
     [HttpPut("EditUser", Name = "EditUser")]
     public IActionResult EditUser(User user)
     {
-        int boolToInt = -1;
+        int boolToInt;
         if (user.Active == true) boolToInt = 1;
         else boolToInt = 0;
         string sql = @"
@@ -97,7 +96,7 @@ public class UserController : ControllerBase
         else throw new Exception("Failed to Add User!");
     }
 
-    [HttpDelete("DeleteUser", Name = "DeleteUser")]
+    [HttpDelete("DeleteUser/{UserId}", Name = "DeleteUser")]
     public IActionResult DeleteUser(int UserId)
     {
         string sql = @"
