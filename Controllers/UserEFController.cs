@@ -20,7 +20,7 @@ public class UserEFController : ControllerBase
     }
 
     // [HttpGet("controller/url/{url_params}", Name = "Endpoint Name")]
-    [HttpGet("GetAllUsers/", Name = "GetAllUsers")]
+    [HttpGet("GetAllUsers/", Name = "GetAllUsersEF")]
     public IEnumerable<User> GetAllUsers()
     {
         IEnumerable<User> users = _entityFramework.Users.ToList<User>();
@@ -28,7 +28,7 @@ public class UserEFController : ControllerBase
     }
 
     // [HttpGet("controller/url/{url_params}", Name = "Endpoint Name")]
-    [HttpGet("GetSingleUser/{UserId}", Name = "GetSingleUser")]
+    [HttpGet("GetSingleUser/{UserId}", Name = "GetSingleUserEF")]
     public User GetSingleUser(int UserId)
     {
         User? user = _entityFramework.Users.Where(u => u.UserId == UserId).FirstOrDefault<User>();
@@ -36,7 +36,7 @@ public class UserEFController : ControllerBase
         else throw new Exception("Failed to GetSingleUser");
     }
 
-    [HttpPut("EditUser", Name = "EditUser")]
+    [HttpPut("EditUser", Name = "EditUserEF")]
     public IActionResult EditUser(User user)
     {
         // find user by Id
@@ -55,7 +55,7 @@ public class UserEFController : ControllerBase
         else throw new Exception("user from DB was null!");
     }
 
-    [HttpPost("AddUser", Name = "AddUser")]
+    [HttpPost("AddUser", Name = "AddUserEF")]
     public IActionResult AddUser(UserDTO user)
     {
         User userDb = new User();
@@ -69,7 +69,7 @@ public class UserEFController : ControllerBase
         else throw new Exception("Failed to Add User with EF");
     }
 
-    [HttpDelete("DeleteUser/{UserId}", Name = "DeleteUser")]
+    [HttpDelete("DeleteUser/{UserId}", Name = "DeleteUserEF")]
     public IActionResult DeleteUser(int UserId)
     {
         User? userDb = _entityFramework.Users.Where(u => u.UserId == UserId).FirstOrDefault();

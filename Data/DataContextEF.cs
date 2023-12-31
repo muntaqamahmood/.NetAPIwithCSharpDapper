@@ -15,8 +15,8 @@ namespace DotNetAPI.Data
         // We need DBSet to map our model back to our 
         // Table for each Model we want to modify/alter
         public virtual DbSet<User> Users { get; set; }
-        public virtual DbSet<UserSalary> UserSalaries { get; set; }
-        public virtual DbSet<UserJobInfo> UserJobInfos { get; set; }
+        public virtual DbSet<UserSalary> UserSalary { get; set; }
+        public virtual DbSet<UserJobInfo> UserJobInfo { get; set; }
 
         // tell EF where our Tables are in DB
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,7 +30,7 @@ namespace DotNetAPI.Data
             modelBuilder.Entity<UserSalary>()
             .HasKey(u => u.UserId);
 
-            modelBuilder.Entity<User>()
+            modelBuilder.Entity<UserJobInfo>()
             .HasKey(u => u.UserId);
         }
 
