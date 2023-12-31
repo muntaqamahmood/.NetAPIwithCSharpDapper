@@ -1,8 +1,8 @@
+using AutoMapper;
 using DotNetAPI.Data;
 using DotNetAPI.DTOs;
 using DotNetAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 // sub namespace so that .net doesnt load up this controller as soon as we run the project
 // and save some resource + memory during runtime  
 namespace DotNetAPI.Controllers;
@@ -12,11 +12,17 @@ namespace DotNetAPI.Controllers;
 public class UserEFController : ControllerBase
 {
     DataContextEF _entityFramework;
+    IMapper _mapper;
 
     // Constructor for Controller Class
     public UserEFController(IConfiguration config)
     {
         _entityFramework = new DataContextEF(config);
+        // https://docs.automapper.org/en/stable/Getting-started.html
+        _mapper = new Mapper(new MapperConfiguration(config =>
+        {
+            config.CreateMap<UserDTO, User>();
+        }));
     }
 
     // [HttpGet("controller/url/{url_params}", Name = "Endpoint Name")]
@@ -27,7 +33,6 @@ public class UserEFController : ControllerBase
         return users;
     }
 
-    // [HttpGet("controller/url/{url_params}", Name = "Endpoint Name")]
     [HttpGet("GetSingleUser/{UserId}", Name = "GetSingleUserEF")]
     public User GetSingleUser(int UserId)
     {
@@ -58,12 +63,8 @@ public class UserEFController : ControllerBase
     [HttpPost("AddUser", Name = "AddUserEF")]
     public IActionResult AddUser(UserDTO user)
     {
-        User userDb = new User();
-        userDb.Active = user.Active;
-        userDb.FirstName = user.FirstName;
-        userDb.LastName = user.LastName;
-        userDb.Gender = user.Gender;
-        userDb.Email = user.Email;
+        // User userDb = new User();
+        User userDb = _mapper.Map<User>(user);
         _entityFramework.Users.Add(userDb); // dont forget the .Users
         if (_entityFramework.SaveChanges() > 0) return Ok();
         else throw new Exception("Failed to Add User with EF");
