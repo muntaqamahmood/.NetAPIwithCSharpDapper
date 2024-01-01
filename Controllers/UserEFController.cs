@@ -31,16 +31,13 @@ public class UserEFController : ControllerBase
     [HttpGet("GetAllUsers/", Name = "GetAllUsersEF")]
     public IEnumerable<User> GetAllUsers()
     {
-        IEnumerable<User> users = _entityFramework.Users.ToList<User>();
-        return users;
+        return _userRepository.GetAllUsers();
     }
 
     [HttpGet("GetSingleUser/{UserId}", Name = "GetSingleUserEF")]
     public User GetSingleUser(int UserId)
     {
-        User? user = _entityFramework.Users.Where(u => u.UserId == UserId).FirstOrDefault<User>();
-        if (user != null) return user;
-        else throw new Exception("Failed to GetSingleUser");
+        return _userRepository.GetSingleUser(UserId);
     }
 
     [HttpPut("EditUser", Name = "EditUserEF")]
