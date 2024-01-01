@@ -12,12 +12,14 @@ namespace DotNetAPI.Controllers;
 public class UserJobInfoEFController : ControllerBase
 {
     DataContextEF _entityFramework;
+    IUserRepository _userRepository;
     IMapper _mapper;
 
     // Constructor for Controller Class
-    public UserJobInfoEFController(IConfiguration config)
+    public UserJobInfoEFController(IConfiguration config, IUserRepository userRepository)
     {
         _entityFramework = new DataContextEF(config);
+        _userRepository = userRepository;
         // https://docs.automapper.org/en/stable/Getting-started.html
         _mapper = new Mapper(new MapperConfiguration(config =>
         {
@@ -51,7 +53,7 @@ public class UserJobInfoEFController : ControllerBase
             // update User
             userJobInfoDb.JobTitle = userJobInfo.JobTitle;
             userJobInfoDb.Department = userJobInfo.Department;
-            if (_entityFramework.SaveChanges() > 0) return Ok(); // save updated user
+            if (_userRepository.SaveChanges()) return Ok(); // save updated user
             else throw new Exception("Failed to Edit User JobInfo!");
         }
         else throw new Exception("userJobInfo from DB was null!");
@@ -70,8 +72,8 @@ public class UserJobInfoEFController : ControllerBase
             UserId = newIdx
         };
 
-        _entityFramework.UserJobInfo.Add(userJobInfoDb);
-        if (_entityFramework.SaveChanges() > 0) return Ok();
+        _userRepository.AddEntity<UserJobInfo>(userJobInfoDb);
+        if (_userRepository.SaveChanges()) return Ok();
         else throw new Exception("Failed to Add User JobInfo with EF");
     }
 
@@ -81,9 +83,9 @@ public class UserJobInfoEFController : ControllerBase
         UserJobInfo? userDb = _entityFramework.UserJobInfo.Where(u => u.UserId == UserId).FirstOrDefault<UserJobInfo>();
         if (userDb != null)
         {
-            _entityFramework.UserJobInfo.Remove(userDb);
+            _userRepository.RemoveEntity<UserJobInfo>(userDb);
 
-            if (_entityFramework.SaveChanges() > 0) return Ok();
+            if (_userRepository.SaveChanges()) return Ok();
             else throw new Exception("Failed to Delete User JobInfo with EF");
         }
         else throw new Exception("User not found!");
@@ -95,9 +97,9 @@ public class UserJobInfoEFController : ControllerBase
         UserJobInfo? userDb = _entityFramework.UserJobInfo.Where(u => u.JobTitle == JobTitle).FirstOrDefault<UserJobInfo>();
         if (userDb != null)
         {
-            _entityFramework.UserJobInfo.Remove(userDb);
+            _userRepository.RemoveEntity<UserJobInfo>(userDb);
 
-            if (_entityFramework.SaveChanges() > 0) return Ok();
+            if (_userRepository.SaveChanges()) return Ok();
             else throw new Exception("Failed to Delete User JobInfo with EF");
         }
         else throw new Exception("User not found!");

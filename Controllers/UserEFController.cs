@@ -12,12 +12,14 @@ namespace DotNetAPI.Controllers;
 public class UserEFController : ControllerBase
 {
     DataContextEF _entityFramework;
+    IUserRepository _userRepository;
     IMapper _mapper;
 
     // Constructor for Controller Class
-    public UserEFController(IConfiguration config)
+    public UserEFController(IConfiguration config, IUserRepository userRepository)
     {
         _entityFramework = new DataContextEF(config);
+        _userRepository = userRepository;
         // https://docs.automapper.org/en/stable/Getting-started.html
         _mapper = new Mapper(new MapperConfiguration(config =>
         {
@@ -54,7 +56,7 @@ public class UserEFController : ControllerBase
             userDb.LastName = user.LastName;
             userDb.Gender = user.Gender;
             userDb.Email = user.Email;
-            if (_entityFramework.SaveChanges() > 0) return Ok(); // save updated user
+            if (_userRepository.SaveChanges()) return Ok(); // save updated user
             else throw new Exception("Failed to Edit User!");
         }
         else throw new Exception("user from DB was null!");
@@ -63,10 +65,9 @@ public class UserEFController : ControllerBase
     [HttpPost("AddUser", Name = "AddUserEF")]
     public IActionResult AddUser(UserDTO user)
     {
-        // User userDb = new User();
         User userDb = _mapper.Map<User>(user);
-        _entityFramework.Users.Add(userDb); // dont forget the .Users
-        if (_entityFramework.SaveChanges() > 0) return Ok();
+        _userRepository.AddEntity<User>(userDb);
+        if (_userRepository.SaveChanges()) return Ok();
         else throw new Exception("Failed to Add User with EF");
     }
 
@@ -76,9 +77,9 @@ public class UserEFController : ControllerBase
         User? userDb = _entityFramework.Users.Where(u => u.UserId == UserId).FirstOrDefault();
         if (userDb != null)
         {
-            _entityFramework.Users.Remove(userDb);
+            _userRepository.RemoveEntity<User>(userDb);
 
-            if (_entityFramework.SaveChanges() > 0) return Ok();
+            if (_userRepository.SaveChanges()) return Ok();
             else throw new Exception("Failed to Delete User with EF");
         }
         else throw new Exception("User not found!");

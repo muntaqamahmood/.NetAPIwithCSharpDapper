@@ -12,12 +12,14 @@ namespace DotNetAPI.Controllers;
 public class UserSalaryEFController : ControllerBase
 {
     DataContextEF _entityFramework;
+    IUserRepository _userRepository;
     IMapper _mapper;
 
     // Constructor for Controller Class
-    public UserSalaryEFController(IConfiguration config)
+    public UserSalaryEFController(IConfiguration config, IUserRepository userRepository)
     {
         _entityFramework = new DataContextEF(config);
+        _userRepository = userRepository;
         // https://docs.automapper.org/en/stable/Getting-started.html
         _mapper = new Mapper(new MapperConfiguration(config =>
         {
@@ -50,7 +52,7 @@ public class UserSalaryEFController : ControllerBase
         {
             // update User
             userSalaryDb.Salary = userSalary.Salary;
-            if (_entityFramework.SaveChanges() > 0) return Ok(); // save updated user
+            if (_userRepository.SaveChanges()) return Ok(); // save updated user
             else throw new Exception("Failed to Edit User Salary!");
         }
         else throw new Exception("userSalary from DB was null!");
@@ -67,8 +69,8 @@ public class UserSalaryEFController : ControllerBase
             UserId = newIdx
         };
         // userSalaryDb.UserId = userSalary.
-        _entityFramework.UserSalary.Add(userSalaryDb); // dont forget the .Users
-        if (_entityFramework.SaveChanges() > 0) return Ok();
+        _userRepository.AddEntity<UserSalary>(userSalaryDb); // dont forget the .Users
+        if (_userRepository.SaveChanges()) return Ok();
         else throw new Exception("Failed to Add User Salary with EF");
     }
 
@@ -78,9 +80,9 @@ public class UserSalaryEFController : ControllerBase
         UserSalary? userDb = _entityFramework.UserSalary.Where(u => u.UserId == UserId).FirstOrDefault<UserSalary>();
         if (userDb != null)
         {
-            _entityFramework.UserSalary.Remove(userDb);
+            _userRepository.RemoveEntity<UserSalary>(userDb);
 
-            if (_entityFramework.SaveChanges() > 0) return Ok();
+            if (_userRepository.SaveChanges()) return Ok();
             else throw new Exception("Failed to Delete User Salary with EF");
         }
         else throw new Exception("User not found!");
