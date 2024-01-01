@@ -11,14 +11,12 @@ namespace DotNetAPI.Controllers;
 [Route("[controller]")]
 public class UserSalaryEFController : ControllerBase
 {
-    DataContextEF _entityFramework;
     IUserRepository _userRepository;
     IMapper _mapper;
 
     // Constructor for Controller Class
-    public UserSalaryEFController(IConfiguration config, IUserRepository userRepository)
+    public UserSalaryEFController(IUserRepository userRepository)
     {
-        _entityFramework = new DataContextEF(config);
         _userRepository = userRepository;
         // https://docs.automapper.org/en/stable/Getting-started.html
         _mapper = new Mapper(new MapperConfiguration(config =>
@@ -31,38 +29,31 @@ public class UserSalaryEFController : ControllerBase
     [HttpGet("GetAllUserSalary/", Name = "GetAllUserSalaryEF")]
     public IEnumerable<UserSalary> GetAllUserSalary()
     {
-        IEnumerable<UserSalary> userSalaries = _entityFramework.UserSalary.ToList<UserSalary>();
-        return userSalaries;
+        return _userRepository.GetAllUserSalary();
     }
 
     [HttpGet("GetSingleUserSalary/{UserId}", Name = "GetSingleUserSalaryEF")]
     public UserSalary GetSingleUserSalary(int UserId)
     {
-        UserSalary? userSalary = _entityFramework.UserSalary.Where(u => u.UserId == UserId).FirstOrDefault<UserSalary>();
-        if (userSalary != null) return userSalary;
-        else throw new Exception("Failed to Get Single User Salary");
+        return _userRepository.GetSingleUserSalary(UserId);
     }
 
     [HttpPut("EditUserSalary", Name = "EditUserSalaryEF")]
     public IActionResult EditUser(UserSalary userSalary)
     {
         // find user by Id
-        UserSalary? userSalaryDb = _entityFramework.UserSalary.Where(u => u.UserId == userSalary.UserId).FirstOrDefault<UserSalary>();
-        if (userSalaryDb != null)
-        {
-            // update User
-            userSalaryDb.Salary = userSalary.Salary;
-            if (_userRepository.SaveChanges()) return Ok(); // save updated user
-            else throw new Exception("Failed to Edit User Salary!");
-        }
-        else throw new Exception("userSalary from DB was null!");
+        UserSalary? userSalaryDb = _userRepository.GetSingleUserSalary(userSalary.UserId);
+        // update User
+        userSalaryDb.Salary = userSalary.Salary;
+        if (_userRepository.SaveChanges()) return Ok(); // save updated user
+        else throw new Exception("Failed to Edit User Salary!");
     }
 
     [HttpPost("AddUserSalary", Name = "AddUserSalaryEF")]
     public IActionResult AddUserSalary(UserSalary userSalary)
     {
         // get max index so far
-        int newIdx = _entityFramework.UserSalary.Max(u => u.UserId) + 1;
+        int newIdx = _userRepository.MaxIndex<UserSalary>(userSalary) + 1;
         UserSalary userSalaryDb = new UserSalary
         {
             Salary = userSalary.Salary,
@@ -77,14 +68,10 @@ public class UserSalaryEFController : ControllerBase
     [HttpDelete("DeleteUserSalary/{UserId}", Name = "DeleteUserSalaryEF")]
     public IActionResult DeleteUserSalary(int UserId)
     {
-        UserSalary? userDb = _entityFramework.UserSalary.Where(u => u.UserId == UserId).FirstOrDefault<UserSalary>();
-        if (userDb != null)
-        {
-            _userRepository.RemoveEntity<UserSalary>(userDb);
+        UserSalary? userDb = _userRepository.GetSingleUserSalary(UserId);
+        _userRepository.RemoveEntity<UserSalary>(userDb);
 
-            if (_userRepository.SaveChanges()) return Ok();
-            else throw new Exception("Failed to Delete User Salary with EF");
-        }
-        else throw new Exception("User not found!");
+        if (_userRepository.SaveChanges()) return Ok();
+        else throw new Exception("Failed to Delete User Salary with EF");
     }
 }

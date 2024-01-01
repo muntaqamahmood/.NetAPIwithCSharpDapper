@@ -11,14 +11,12 @@ namespace DotNetAPI.Controllers;
 [Route("[controller]")]
 public class UserEFController : ControllerBase
 {
-    DataContextEF _entityFramework;
     IUserRepository _userRepository;
     IMapper _mapper;
 
     // Constructor for Controller Class
-    public UserEFController(IConfiguration config, IUserRepository userRepository)
+    public UserEFController(IUserRepository userRepository)
     {
-        _entityFramework = new DataContextEF(config);
         _userRepository = userRepository;
         // https://docs.automapper.org/en/stable/Getting-started.html
         _mapper = new Mapper(new MapperConfiguration(config =>
@@ -44,19 +42,16 @@ public class UserEFController : ControllerBase
     public IActionResult EditUser(User user)
     {
         // find user by Id
-        User? userDb = _entityFramework.Users.Where(u => u.UserId == user.UserId).FirstOrDefault<User>();
-        if (userDb != null)
-        {
-            // update User
-            userDb.Active = user.Active;
-            userDb.FirstName = user.FirstName;
-            userDb.LastName = user.LastName;
-            userDb.Gender = user.Gender;
-            userDb.Email = user.Email;
-            if (_userRepository.SaveChanges()) return Ok(); // save updated user
-            else throw new Exception("Failed to Edit User!");
-        }
-        else throw new Exception("user from DB was null!");
+        User? userDb = _userRepository.GetSingleUser(user.UserId);
+
+        // update User
+        userDb.Active = user.Active;
+        userDb.FirstName = user.FirstName;
+        userDb.LastName = user.LastName;
+        userDb.Gender = user.Gender;
+        userDb.Email = user.Email;
+        if (_userRepository.SaveChanges()) return Ok(); // save updated user
+        else throw new Exception($"Failed to Save PUT Changes for User with UserId: {userDb.UserId}");
     }
 
     [HttpPost("AddUser", Name = "AddUserEF")]
@@ -65,20 +60,15 @@ public class UserEFController : ControllerBase
         User userDb = _mapper.Map<User>(user);
         _userRepository.AddEntity<User>(userDb);
         if (_userRepository.SaveChanges()) return Ok();
-        else throw new Exception("Failed to Add User with EF");
+        else throw new Exception($"Failed to Save POST Changes for User with UserId: {userDb.UserId}");
     }
 
     [HttpDelete("DeleteUser/{UserId}", Name = "DeleteUserEF")]
     public IActionResult DeleteUser(int UserId)
     {
-        User? userDb = _entityFramework.Users.Where(u => u.UserId == UserId).FirstOrDefault();
-        if (userDb != null)
-        {
-            _userRepository.RemoveEntity<User>(userDb);
-
-            if (_userRepository.SaveChanges()) return Ok();
-            else throw new Exception("Failed to Delete User with EF");
-        }
-        else throw new Exception("User not found!");
+        User? userDb = _userRepository.GetSingleUser(UserId);
+        _userRepository.RemoveEntity<User>(userDb);
+        if (_userRepository.SaveChanges()) return Ok();
+        else throw new Exception($"Failed to Save DELETE Changes for User with UserId: {UserId}");
     }
 }
