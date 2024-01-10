@@ -6,9 +6,18 @@ using System.Data;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
+using DotNetAPI.Models;
 
 namespace DotNetAPI.Controllers
 {
+    [Authorize]
+    [ApiController]
+    [Route("[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly DataContextDapper _dataContextDapper;
@@ -19,6 +28,7 @@ namespace DotNetAPI.Controllers
             _dataContextDapper = new DataContextDapper(configuration);
         }
 
+        [AllowAnonymous]
         [HttpPost("Register", Name = "Register")]
         public IActionResult RegisterUser(UserForRegistrationDto userToRegister)
         {
@@ -76,6 +86,7 @@ namespace DotNetAPI.Controllers
             else throw new Exception("Passwords do not Match! Try again.");
         }
 
+        [AllowAnonymous]
         [HttpPost("Login", Name = "Login")]
         public IActionResult LoginUser(UserForLoginDto userToLogin)
         {
@@ -95,7 +106,10 @@ namespace DotNetAPI.Controllers
                     return StatusCode(401, "Incorrect password!");
                 }
             }
-            return Ok();
+            int userId = _dataContextDapper.LoadDataSingle<int>("SELECT [UserId] FROM TutorialAppSchema.Users WHERE [Email] = '" + userToLogin.Email + "'");
+            return Ok(new Dictionary<string, string>{
+                {"token", CreateToken(userId)}
+            });
         }
 
         private byte[] GetPasswordHash(string password, byte[] passwordSalt)
@@ -111,6 +125,42 @@ namespace DotNetAPI.Controllers
                 iterationCount: 1000000,
                 numBytesRequested: 256 / 8
             );
+        }
+
+        private string CreateToken(int userId)
+        {
+            Claim[] claims = new Claim[]{
+                new Claim("userId", userId.ToString())
+            };
+            string? tokenKeyString = _configuration.GetSection("AppSettings:TokenKey").Value;
+            SymmetricSecurityKey tokenKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    tokenKeyString != null ? tokenKeyString : ""
+                    )
+                );
+            // create sign creds to sign tokenKey
+            SigningCredentials credentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha512Signature);
+
+            SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor()
+            {
+                Subject = new ClaimsIdentity(claims),
+                SigningCredentials = credentials,
+                Expires = DateTime.Now.AddDays(1)
+            };
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            // create the token with the jwtTokenHandler
+            SecurityToken token = tokenHandler.CreateToken(descriptor);
+            // returns the created token as a string
+            return tokenHandler.WriteToken(token);
+        }
+
+        [HttpGet("RefreshToken")]
+        public string RefreshToken()
+        {
+            string sqlGetUserId = "SELECT [UserId] FROM TutorialAppSchema.Users WHERE [UserId] = '" + User.FindFirst("userId")?.Value + "'";
+            int userId = _dataContextDapper.LoadDataSingle<int>(sqlGetUserId);
+            return CreateToken(userId);
         }
 
     }
