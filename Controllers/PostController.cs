@@ -108,12 +108,12 @@ namespace DotNetAPI.Controllers
             else throw new Exception("Failed to Add Post!");
         }
 
-        [HttpPost("EditPost/", Name = "EditPost")]
+        [HttpPut("EditPost/", Name = "EditPost")]
         public IActionResult EditPost(PostToEditDTO postToEdit)
         {
             string? userId = this.User.FindFirst("userId")?.Value;
             string sql = @"
-                UPDATE TutorialAppSchema.Posts(
+                UPDATE TutorialAppSchema.Posts
                     SET [PostTitle] = '" + postToEdit.PostTitle +
             "', [PostContent] = '" + postToEdit.PostContent +
             "', [PostUpdated] = GETDATE() WHERE PostId = " + postToEdit.PostId.ToString()
@@ -132,7 +132,23 @@ namespace DotNetAPI.Controllers
                 + " AND UserId = " + userId;
             bool check = _dapper.ExecuteSqlWithRowCount(sql);
             if (check == true) return Ok();
-            else throw new Exception("Failed to Edit Post!");
+            else throw new Exception("Failed to Delete Post!");
+        }
+
+        [HttpGet("SearchPostsByString/{searchParam}", Name = "Search")]
+        public IEnumerable<Posts> SearchPosts(string searchParam)
+        {
+            IEnumerable<Posts> posts;
+            string sql = @"SELECT [PostId],
+                [UserId],
+                [PostTitle],
+                [PostContent],
+                [PostCreated],
+                [PostUpdated]
+                FROM TutorialAppSchema.Posts
+                WHERE PostTitle LIKE '%" + searchParam + "%' OR PostContent LIKE '%" + searchParam + "%'";
+            posts = _dapper.LoadData<Posts>(sql);
+            return posts;
         }
     }
 }
